@@ -1,0 +1,7 @@
+{
+  "name": "Ludo Magic Savannah",
+  "description": "A competitive, real-time multiplayer Ludo game set in the magical African Savannah with animal guardians, magical abilities, ranked seasons, clans, and dynamic boards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
