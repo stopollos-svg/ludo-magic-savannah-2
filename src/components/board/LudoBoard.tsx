@@ -2,10 +2,10 @@
  * Ludo Magic Savannah - Thematic 15x15 Ludo Board
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { MAIN_PATH_COORDS, HOME_STRETCH_COORDS } from '../../utils/boardCoordinates';
-import { SAFE_POSITIONS, START_POSITIONS, PlayerColor } from '../../types/game';
+import { SAFE_POSITIONS, START_POSITIONS, PlayerColor, PlayerInfo } from '../../types/game';
 import { PieceToken } from './PieceToken';
 import { Sparkles, Shield, TreePine } from 'lucide-react';
 
@@ -140,8 +140,25 @@ export const LudoBoard: React.FC<LudoBoardProps> = () => {
     );
   };
 
+  // Map active players by color
+  const activePlayersByColor = useMemo(() => {
+    const map: Partial<Record<PlayerColor, PlayerInfo>> = {};
+    gameState.players.forEach((p) => {
+      map[p.color] = p;
+    });
+    return map;
+  }, [gameState.players]);
+
+  const redPlayer = activePlayersByColor['red'];
+  const greenPlayer = activePlayersByColor['green'];
+  const yellowPlayer = activePlayersByColor['yellow'];
+  const bluePlayer = activePlayersByColor['blue'];
+
   return (
-    <div className="relative w-full max-w-[560px] aspect-square mx-auto p-2 sm:p-3 bg-gradient-to-b from-[#182818] via-[#0f1b0f] to-[#081008] rounded-2xl sm:rounded-3xl border-2 sm:border-4 border-[#d4af37]/60 shadow-2xl shadow-black overflow-hidden select-none">
+    <div
+      id="onboarding-board-target"
+      className="relative w-full max-w-[560px] aspect-square mx-auto p-2 sm:p-3 bg-gradient-to-b from-[#182818] via-[#0f1b0f] to-[#081008] rounded-2xl sm:rounded-3xl border-2 sm:border-4 border-[#d4af37]/60 shadow-2xl shadow-black overflow-hidden select-none"
+    >
       {/* Background Particle Canvas */}
       <canvas
         ref={canvasRef}
@@ -153,19 +170,38 @@ export const LudoBoard: React.FC<LudoBoardProps> = () => {
         
         {/* --- 4 YARD BASES (6x6 cells each) --- */}
         {/* 1. Red Yard (Top Left: Lion Rock) */}
-        <div className="col-span-6 row-span-6 bg-gradient-to-br from-[#2d0f0f] via-[#1a0808] to-[#120505] border-2 border-red-500/40 p-2 sm:p-3 flex flex-col justify-between rounded-tl-lg relative overflow-hidden shadow-lg">
+        <div
+          className={`col-span-6 row-span-6 border-2 p-2 sm:p-3 flex flex-col justify-between rounded-tl-lg relative overflow-hidden shadow-lg transition-all ${
+            redPlayer
+              ? 'bg-gradient-to-br from-[#2d0f0f] via-[#1a0808] to-[#120505] border-red-500/50'
+              : 'bg-[#080f08]/80 border-stone-800/40 opacity-35'
+          }`}
+        >
           <div className="flex items-center justify-between text-red-200">
             <span className="font-bold text-xs sm:text-sm tracking-wide flex items-center gap-1">
-              🦁 Lion Pride
+              {redPlayer ? `${redPlayer.avatar} ${redPlayer.name}` : '🌿 Lion Rock'}
             </span>
-            <span className="text-[10px] text-red-300/70 uppercase">Yard</span>
+            <span className="text-[10px] text-red-300/70 uppercase">
+              {redPlayer ? 'Active Yard' : 'Resting'}
+            </span>
           </div>
           {/* Inner Yard Circle */}
-          <div className="w-full aspect-square max-w-[80%] mx-auto bg-black/50 rounded-xl border border-red-400/30 grid grid-cols-2 grid-rows-2 p-2 gap-2 place-items-center">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-red-950/80 border border-red-500/30 flex items-center justify-center text-xs">🐾</div>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-red-950/80 border border-red-500/30 flex items-center justify-center text-xs">🐾</div>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-red-950/80 border border-red-500/30 flex items-center justify-center text-xs">🐾</div>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-red-950/80 border border-red-500/30 flex items-center justify-center text-xs">🐾</div>
+          <div className="w-full aspect-square max-w-[80%] mx-auto bg-black/50 rounded-xl border border-red-400/20 grid grid-cols-2 grid-rows-2 p-2 gap-2 place-items-center">
+            {redPlayer ? (
+              <>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-red-950/80 border border-red-500/40 flex items-center justify-center text-xs">🐾</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-red-950/80 border border-red-500/40 flex items-center justify-center text-xs">🐾</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-red-950/80 border border-red-500/40 flex items-center justify-center text-xs">🐾</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-red-950/80 border border-red-500/40 flex items-center justify-center text-xs">🐾</div>
+              </>
+            ) : (
+              <>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d160d]/50 border border-stone-800/40 flex items-center justify-center text-[10px] text-stone-600">·</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d160d]/50 border border-stone-800/40 flex items-center justify-center text-[10px] text-stone-600">·</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d160d]/50 border border-stone-800/40 flex items-center justify-center text-[10px] text-stone-600">·</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d160d]/50 border border-stone-800/40 flex items-center justify-center text-[10px] text-stone-600">·</div>
+              </>
+            )}
           </div>
         </div>
 
@@ -179,18 +215,37 @@ export const LudoBoard: React.FC<LudoBoardProps> = () => {
         </div>
 
         {/* 2. Green Yard (Top Right: Elephant Valley) */}
-        <div className="col-span-6 row-span-6 bg-gradient-to-bl from-[#0f2d18] via-[#081a0e] to-[#05120a] border-2 border-emerald-500/40 p-2 sm:p-3 flex flex-col justify-between rounded-tr-lg relative overflow-hidden shadow-lg">
+        <div
+          className={`col-span-6 row-span-6 border-2 p-2 sm:p-3 flex flex-col justify-between rounded-tr-lg relative overflow-hidden shadow-lg transition-all ${
+            greenPlayer
+              ? 'bg-gradient-to-bl from-[#0f2d18] via-[#081a0e] to-[#05120a] border-emerald-500/50'
+              : 'bg-[#080f08]/80 border-stone-800/40 opacity-35'
+          }`}
+        >
           <div className="flex items-center justify-between text-emerald-200">
             <span className="font-bold text-xs sm:text-sm tracking-wide flex items-center gap-1">
-              🐘 Elephant Tribe
+              {greenPlayer ? `${greenPlayer.avatar} ${greenPlayer.name}` : '🌿 Elephant Glade'}
             </span>
-            <span className="text-[10px] text-emerald-300/70 uppercase">Yard</span>
+            <span className="text-[10px] text-emerald-300/70 uppercase">
+              {greenPlayer ? 'Active Yard' : 'Resting'}
+            </span>
           </div>
-          <div className="w-full aspect-square max-w-[80%] mx-auto bg-black/50 rounded-xl border border-emerald-400/30 grid grid-cols-2 grid-rows-2 p-2 gap-2 place-items-center">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center text-xs">🐾</div>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center text-xs">🐾</div>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center text-xs">🐾</div>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center text-xs">🐾</div>
+          <div className="w-full aspect-square max-w-[80%] mx-auto bg-black/50 rounded-xl border border-emerald-400/20 grid grid-cols-2 grid-rows-2 p-2 gap-2 place-items-center">
+            {greenPlayer ? (
+              <>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-xs">🐾</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-xs">🐾</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-xs">🐾</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-emerald-950/80 border border-emerald-500/40 flex items-center justify-center text-xs">🐾</div>
+              </>
+            ) : (
+              <>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d160d]/50 border border-stone-800/40 flex items-center justify-center text-[10px] text-stone-600">·</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d160d]/50 border border-stone-800/40 flex items-center justify-center text-[10px] text-stone-600">·</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d160d]/50 border border-stone-800/40 flex items-center justify-center text-[10px] text-stone-600">·</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d160d]/50 border border-stone-800/40 flex items-center justify-center text-[10px] text-stone-600">·</div>
+              </>
+            )}
           </div>
         </div>
 
@@ -211,13 +266,13 @@ export const LudoBoard: React.FC<LudoBoardProps> = () => {
           {/* 4 Colored Goal Triangles */}
           <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
             {/* Red Triangle */}
-            <polygon points="0,0 50,50 0,100" fill="#dc2626" fillOpacity="0.8" />
+            <polygon points="0,0 50,50 0,100" fill="#dc2626" fillOpacity={redPlayer ? '0.85' : '0.15'} />
             {/* Green Triangle */}
-            <polygon points="0,0 100,0 50,50" fill="#059669" fillOpacity="0.8" />
+            <polygon points="0,0 100,0 50,50" fill="#059669" fillOpacity={greenPlayer ? '0.85' : '0.15'} />
             {/* Yellow Triangle */}
-            <polygon points="100,0 100,100 50,50" fill="#d4af37" fillOpacity="0.8" />
+            <polygon points="100,0 100,100 50,50" fill="#d4af37" fillOpacity={yellowPlayer ? '0.85' : '0.15'} />
             {/* Blue Triangle */}
-            <polygon points="0,100 100,100 50,50" fill="#2563eb" fillOpacity="0.8" />
+            <polygon points="0,100 100,100 50,50" fill="#2563eb" fillOpacity={bluePlayer ? '0.85' : '0.15'} />
           </svg>
 
           {/* Central Sacred Oasis Totem */}
@@ -236,18 +291,37 @@ export const LudoBoard: React.FC<LudoBoardProps> = () => {
         </div>
 
         {/* 3. Blue Yard (Bottom Left: Zebra Haven) */}
-        <div className="col-span-6 row-span-6 bg-gradient-to-tr from-[#0f1c2d] via-[#08101a] to-[#050a12] border-2 border-blue-500/40 p-2 sm:p-3 flex flex-col justify-between rounded-bl-lg relative overflow-hidden shadow-lg">
-          <div className="w-full aspect-square max-w-[80%] mx-auto bg-black/50 rounded-xl border border-blue-400/30 grid grid-cols-2 grid-rows-2 p-2 gap-2 place-items-center">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-950/80 border border-blue-500/30 flex items-center justify-center text-xs">🐾</div>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-950/80 border border-blue-500/30 flex items-center justify-center text-xs">🐾</div>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-950/80 border border-blue-500/30 flex items-center justify-center text-xs">🐾</div>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-950/80 border border-blue-500/30 flex items-center justify-center text-xs">🐾</div>
+        <div
+          className={`col-span-6 row-span-6 border-2 p-2 sm:p-3 flex flex-col justify-between rounded-bl-lg relative overflow-hidden shadow-lg transition-all ${
+            bluePlayer
+              ? 'bg-gradient-to-tr from-[#0f1c2d] via-[#08101a] to-[#050a12] border-blue-500/50'
+              : 'bg-[#080f08]/80 border-stone-800/40 opacity-35'
+          }`}
+        >
+          <div className="w-full aspect-square max-w-[80%] mx-auto bg-black/50 rounded-xl border border-blue-400/20 grid grid-cols-2 grid-rows-2 p-2 gap-2 place-items-center">
+            {bluePlayer ? (
+              <>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-950/80 border border-blue-500/40 flex items-center justify-center text-xs">🐾</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-950/80 border border-blue-500/40 flex items-center justify-center text-xs">🐾</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-950/80 border border-blue-500/40 flex items-center justify-center text-xs">🐾</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-950/80 border border-blue-500/40 flex items-center justify-center text-xs">🐾</div>
+              </>
+            ) : (
+              <>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d160d]/50 border border-stone-800/40 flex items-center justify-center text-[10px] text-stone-600">·</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d160d]/50 border border-stone-800/40 flex items-center justify-center text-[10px] text-stone-600">·</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d160d]/50 border border-stone-800/40 flex items-center justify-center text-[10px] text-stone-600">·</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d160d]/50 border border-stone-800/40 flex items-center justify-center text-[10px] text-stone-600">·</div>
+              </>
+            )}
           </div>
           <div className="flex items-center justify-between text-blue-200">
             <span className="font-bold text-xs sm:text-sm tracking-wide flex items-center gap-1">
-              🦓 Zebra Pride
+              {bluePlayer ? `${bluePlayer.avatar} ${bluePlayer.name}` : '🌿 Zebra Haven'}
             </span>
-            <span className="text-[10px] text-blue-300/70 uppercase">Yard</span>
+            <span className="text-[10px] text-blue-300/70 uppercase">
+              {bluePlayer ? 'Active Yard' : 'Resting'}
+            </span>
           </div>
         </div>
 
@@ -260,19 +334,38 @@ export const LudoBoard: React.FC<LudoBoardProps> = () => {
           })}
         </div>
 
-        {/* 4. Yellow Yard (Bottom Right: Cheetah Plains) */}
-        <div className="col-span-6 row-span-6 bg-gradient-to-tl from-[#2d250f] via-[#1a1508] to-[#120f05] border-2 border-[#d4af37]/40 p-2 sm:p-3 flex flex-col justify-between rounded-br-lg relative overflow-hidden shadow-lg">
-          <div className="w-full aspect-square max-w-[80%] mx-auto bg-black/50 rounded-xl border border-[#d4af37]/30 grid grid-cols-2 grid-rows-2 p-2 gap-2 place-items-center">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-yellow-950/80 border border-[#d4af37]/30 flex items-center justify-center text-xs">🐾</div>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-yellow-950/80 border border-[#d4af37]/30 flex items-center justify-center text-xs">🐾</div>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-yellow-950/80 border border-[#d4af37]/30 flex items-center justify-center text-xs">🐾</div>
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-yellow-950/80 border border-[#d4af37]/30 flex items-center justify-center text-xs">🐾</div>
+        {/* 4. Yellow Yard (Bottom Right: Giraffe Plains) */}
+        <div
+          className={`col-span-6 row-span-6 border-2 p-2 sm:p-3 flex flex-col justify-between rounded-br-lg relative overflow-hidden shadow-lg transition-all ${
+            yellowPlayer
+              ? 'bg-gradient-to-tl from-[#2d250f] via-[#1a1508] to-[#120f05] border-[#d4af37]/50'
+              : 'bg-[#080f08]/80 border-stone-800/40 opacity-35'
+          }`}
+        >
+          <div className="w-full aspect-square max-w-[80%] mx-auto bg-black/50 rounded-xl border border-[#d4af37]/20 grid grid-cols-2 grid-rows-2 p-2 gap-2 place-items-center">
+            {yellowPlayer ? (
+              <>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-yellow-950/80 border border-[#d4af37]/40 flex items-center justify-center text-xs">🐾</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-yellow-950/80 border border-[#d4af37]/40 flex items-center justify-center text-xs">🐾</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-yellow-950/80 border border-[#d4af37]/40 flex items-center justify-center text-xs">🐾</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-yellow-950/80 border border-[#d4af37]/40 flex items-center justify-center text-xs">🐾</div>
+              </>
+            ) : (
+              <>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d160d]/50 border border-stone-800/40 flex items-center justify-center text-[10px] text-stone-600">·</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d160d]/50 border border-stone-800/40 flex items-center justify-center text-[10px] text-stone-600">·</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d160d]/50 border border-stone-800/40 flex items-center justify-center text-[10px] text-stone-600">·</div>
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#0d160d]/50 border border-stone-800/40 flex items-center justify-center text-[10px] text-stone-600">·</div>
+              </>
+            )}
           </div>
           <div className="flex items-center justify-between text-[#f5df88]">
             <span className="font-bold text-xs sm:text-sm tracking-wide flex items-center gap-1">
-              🐆 Cheetah Pack
+              {yellowPlayer ? `${yellowPlayer.avatar} ${yellowPlayer.name}` : '🌿 Giraffe Valley'}
             </span>
-            <span className="text-[10px] text-[#f5df88]/70 uppercase">Yard</span>
+            <span className="text-[10px] text-[#f5df88]/70 uppercase">
+              {yellowPlayer ? 'Active Yard' : 'Resting'}
+            </span>
           </div>
         </div>
 

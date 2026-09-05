@@ -33,6 +33,7 @@ export interface ChatMessage {
   senderName: string;
   senderAvatar: string;
   senderColor?: string;
+  clanName?: string;
   text: string;
   isEmote?: boolean;
   timestamp: string;

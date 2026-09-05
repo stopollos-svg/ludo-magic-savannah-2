@@ -23,15 +23,249 @@
   .gold-gradient-btn {
     background: linear-gradient(135deg, #e8c858 0%, #d4af37 50%, #aa8218 100%);
   }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .safe-top {
+    padding-top: max(env(safe-area-inset-top, 0px), 8px);
+  }
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+  }
 }
 
-body {
+html, body {
   font-family: 'Outfit', sans-serif;
   background-color: #0d1a0d;
   color: #e0dcc5;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  overscroll-behavior: none;
 }
 
 h1, h2, h3, h4, .font-serif {
   font-family: 'Cinzel', serif;
 }
+
+/* Savannah Living Background Animations */
+@keyframes elephantMarch {
+  0% {
+    transform: translateX(-320px);
+  }
+  100% {
+    transform: translateX(calc(100vw + 320px));
+  }
+}
+
+@keyframes giraffeStroll {
+  0% {
+    transform: translateX(calc(100vw + 220px)) scaleX(-1);
+  }
+  100% {
+    transform: translateX(-240px) scaleX(-1);
+  }
+}
+
+@keyframes legSwingFront {
+  0%, 100% {
+    transform: rotate(-14deg);
+    transform-origin: top center;
+  }
+  50% {
+    transform: rotate(14deg);
+    transform-origin: top center;
+  }
+}
+
+@keyframes legSwingBack {
+  0%, 100% {
+    transform: rotate(14deg);
+    transform-origin: top center;
+  }
+  50% {
+    transform: rotate(-14deg);
+    transform-origin: top center;
+  }
+}
+
+@keyframes trunkSwingAnim {
+  0%, 100% {
+    transform: rotate(0deg);
+    transform-origin: 105px 42px;
+  }
+  50% {
+    transform: rotate(15deg) translateY(-4px);
+    transform-origin: 105px 42px;
+  }
+}
+
+@keyframes earFlapAnim {
+  0%, 100% {
+    transform: scaleX(1);
+    transform-origin: center right;
+  }
+  50% {
+    transform: scaleX(0.75) skewY(4deg);
+    transform-origin: center right;
+  }
+}
+
+@keyframes tailSwishAnim {
+  0%, 100% {
+    transform: rotate(0deg);
+    transform-origin: 20px 40px;
+  }
+  50% {
+    transform: rotate(-16deg);
+    transform-origin: 20px 40px;
+  }
+}
+
+@keyframes giraffeLegsAnim {
+  0%, 100% {
+    transform: rotate(-12deg);
+    transform-origin: top center;
+  }
+  50% {
+    transform: rotate(12deg);
+    transform-origin: top center;
+  }
+}
+
+@keyframes neckBobAnim {
+  0%, 100% {
+    transform: rotate(0deg);
+    transform-origin: 50px 55px;
+  }
+  50% {
+    transform: rotate(-3deg) translateY(-2px);
+    transform-origin: 50px 55px;
+  }
+}
+
+@keyframes flyFlockAnim {
+  0% {
+    transform: translateX(calc(100vw + 120px)) translateY(0);
+  }
+  50% {
+    transform: translateX(50vw) translateY(8px);
+  }
+  100% {
+    transform: translateX(-160px) translateY(-5px);
+  }
+}
+
+@keyframes birdWingAnim {
+  0%, 100% {
+    transform: scaleY(1);
+    transform-origin: center;
+  }
+  50% {
+    transform: scaleY(-0.8);
+    transform-origin: center;
+  }
+}
+
+@keyframes fireflyDrift {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.2;
+  }
+  30% {
+    opacity: 0.9;
+    transform: translate(18px, -24px) scale(1.2);
+  }
+  70% {
+    opacity: 0.4;
+    transform: translate(-15px, -45px) scale(0.9);
+  }
+}
+
+.animate-elephant-march {
+  animation: elephantMarch 42s linear infinite;
+  will-change: transform;
+}
+
+.animate-giraffe-stroll {
+  animation: giraffeStroll 58s linear infinite;
+  animation-delay: 8s;
+  will-change: transform;
+}
+
+.animate-leg-front {
+  animation: legSwingFront 1.8s ease-in-out infinite;
+}
+
+.animate-leg-back {
+  animation: legSwingBack 1.8s ease-in-out infinite;
+}
+
+.animate-leg-front-offset {
+  animation: legSwingFront 1.8s ease-in-out infinite;
+  animation-delay: -0.45s;
+}
+
+.animate-leg-back-offset {
+  animation: legSwingBack 1.8s ease-in-out infinite;
+  animation-delay: -0.45s;
+}
+
+.animate-trunk-swing {
+  animation: trunkSwingAnim 2.6s ease-in-out infinite;
+}
+
+.animate-ear-flap {
+  animation: earFlapAnim 3.2s ease-in-out infinite;
+}
+
+.animate-tail-swish {
+  animation: tailSwishAnim 2s ease-in-out infinite;
+}
+
+.animate-giraffe-legs-front {
+  animation: giraffeLegsAnim 2.4s ease-in-out infinite;
+}
+
+.animate-giraffe-legs-back {
+  animation: giraffeLegsAnim 2.4s ease-in-out infinite;
+  animation-delay: -1.2s;
+}
+
+.animate-neck-bob {
+  animation: neckBobAnim 2.8s ease-in-out infinite;
+}
+
+.animate-fly-flock {
+  animation: flyFlockAnim 30s linear infinite;
+  will-change: transform;
+}
+
+.animate-bird-wing {
+  animation: birdWingAnim 0.7s ease-in-out infinite;
+}
+
+.animate-bird-wing-delay {
+  animation: birdWingAnim 0.7s ease-in-out infinite;
+  animation-delay: -0.25s;
+}
+
+.animate-firefly-1 {
+  animation: fireflyDrift 6s ease-in-out infinite;
+}
+
+.animate-firefly-2 {
+  animation: fireflyDrift 8s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.animate-firefly-3 {
+  animation: fireflyDrift 7s ease-in-out infinite;
+  animation-delay: 3.5s;
+}
+
 

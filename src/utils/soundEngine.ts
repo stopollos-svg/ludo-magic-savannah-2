@@ -279,7 +279,125 @@ class SoundEngine {
     });
   }
 
-  // 8. Savannah Ambient Background Generator
+  // 8. Turn Countdown Timer Tick (Urgent pulse when pressure mounts)
+  public playTimerTick(isUrgent = false) {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+
+    osc.type = isUrgent ? 'sawtooth' : 'sine';
+    const freq = isUrgent ? 880 : 540;
+    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(freq * 1.2, this.ctx.currentTime + 0.04);
+
+    filter.type = 'bandpass';
+    filter.frequency.value = isUrgent ? 1600 : 900;
+    filter.Q.value = 4;
+
+    gain.gain.setValueAtTime(this.sfxVolume * (isUrgent ? 0.35 : 0.15), this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.05);
+  }
+
+  // 9. Turn Timeout Buzzer / Alert
+  public playTimeout() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    // Two rapid low descending warning notes
+    const tones = [220, 165];
+    tones.forEach((freq, idx) => {
+      setTimeout(() => {
+        if (!this.ctx || this.isMuted) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(freq * 0.8, this.ctx.currentTime + 0.15);
+
+        gain.gain.setValueAtTime(this.sfxVolume * 0.4, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.16);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.16);
+      }, idx * 100);
+    });
+  }
+
+  // 10. Tutorial Step Transition (Gentle melodic harp/flute chime)
+  public playTutorialStep() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5
+    notes.forEach((freq, idx) => {
+      setTimeout(() => {
+        if (!this.ctx || this.isMuted) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.05, this.ctx.currentTime + 0.12);
+
+        gain.gain.setValueAtTime(this.sfxVolume * 0.25, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.14);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.14);
+      }, idx * 45);
+    });
+  }
+
+  // 11. Quick Chat Message / Savannah Whisper Chime
+  public playChatMessage() {
+    if (this.isMuted) return;
+    this.initCtx();
+    if (!this.ctx) return;
+
+    const notes = [659.25, 880.0]; // E5 to A5 kalimba chime
+    notes.forEach((freq, idx) => {
+      setTimeout(() => {
+        if (!this.ctx || this.isMuted) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.1, this.ctx.currentTime + 0.08);
+
+        gain.gain.setValueAtTime(this.sfxVolume * 0.3, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.12);
+      }, idx * 60);
+    });
+  }
+
+  // 12. Savannah Ambient Background Generator
   public startAmbience() {
     if (this.isMuted || this.isAmbientPlaying) return;
     this.initCtx();

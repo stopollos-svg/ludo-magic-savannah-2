@@ -1,0 +1,27 @@
+{
+  "id": "/",
+  "name": "Ludo Magic Savannah",
+  "short_name": "LudoSavannah",
+  "description": "A competitive, real-time multiplayer Ludo game set in the magical African Savannah with animal guardians and magical abilities.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0d1a0d",
+  "background_color": "#0d1a0d",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["games", "entertainment"]
+}

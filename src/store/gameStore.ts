@@ -50,14 +50,34 @@ interface AppState {
   setView: (view: AppState['currentView']) => void;
   setSoundEnabled: (enabled: boolean) => void;
   setMusicEnabled: (enabled: boolean) => void;
-  startNewGame: (settings: GameSettings, humanColor?: PlayerColor, customOpponents?: PlayerInfo[]) => void;
+  startNewGame: (
+    settings: GameSettings,
+    humanColor?: PlayerColor,
+    customOpponents?: PlayerInfo[],
+    customPlayers?: PlayerInfo[]
+  ) => void;
   rollDice: () => void;
   selectPieceToMove: (pieceId: number) => void;
   useBeastAbility: (beast: BeastType, targetPieceId?: number) => void;
   cancelAbilityTargeting: () => void;
   endTurn: () => void;
   triggerAITurnIfNeeded: () => void;
-  sendChatMessage: (text: string, isEmote?: boolean) => void;
+  sendChatMessage: (
+    text: string,
+    isEmote?: boolean,
+    senderOverride?: {
+      id: string;
+      name: string;
+      avatar: string;
+      color?: PlayerColor | string;
+      clanName?: string;
+    }
+  ) => void;
+  isChatPanelOpen: boolean;
+  unreadChatCount: number;
+  openChatPanel: () => void;
+  closeChatPanel: () => void;
+  toggleChatPanel: () => void;
   claimQuestReward: (questId: string) => void;
   claimSeasonTier: (tier: number, isPremium: boolean) => void;
   unlockCosmetic: (item: CosmeticItem) => void;
@@ -71,6 +91,11 @@ interface AppState {
   startTournament: () => void;
   loadReplay: (replayId: string) => void;
   stepReplay: (direction: 'next' | 'prev') => void;
+  tickTurnTimer: () => void;
+  handleTurnTimeout: () => void;
+  isOnboardingActive: boolean;
+  openOnboarding: () => void;
+  dismissOnboarding: (neverShowAgain?: boolean) => void;
 }
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -154,6 +179,16 @@ export const useGameStore = create<AppState>((set, get) => ({
   matchmakingSeconds: 0,
   soundEnabled: true,
   musicEnabled: true,
+  isOnboardingActive: false,
+  isChatPanelOpen: false,
+  unreadChatCount: 0,
+
+  openChatPanel: () => set({ isChatPanelOpen: true, unreadChatCount: 0 }),
+  closeChatPanel: () => set({ isChatPanelOpen: false }),
+  toggleChatPanel: () => {
+    const { isChatPanelOpen } = get();
+    set({ isChatPanelOpen: !isChatPanelOpen, unreadChatCount: !isChatPanelOpen ? 0 : get().unreadChatCount });
+  },
 
   setView: (view) => set({ currentView: view }),
 
@@ -168,30 +203,88 @@ export const useGameStore = create<AppState>((set, get) => ({
     set({ musicEnabled: enabled });
   },
 
-  startNewGame: (settings, humanColor = 'red', customOpponents) => {
+  startNewGame: (settings, humanColor = 'red', customOpponents, customPlayers) => {
     soundEngine.playSafeZone();
-    const colors: PlayerColor[] = ['red', 'green', 'yellow', 'blue'];
-    const beasts: BeastType[] = ['lion', 'elephant', 'cheetah', 'zebra'];
-
     let players: PlayerInfo[] = [];
 
-    if (customOpponents && customOpponents.length > 0) {
+    if (customPlayers && customPlayers.length > 0) {
+      players = customPlayers;
+    } else if (customOpponents && customOpponents.length > 0) {
       players = [
         createPlayer('p1', get().userProfile.username, humanColor, get().userProfile.beastGuardian, false),
         ...customOpponents,
       ];
     } else if (settings.mode === 'pass_and_play') {
-      players = colors.slice(0, settings.playerCount).map((col, idx) =>
-        createPlayer(`p_${idx + 1}`, `Player ${idx + 1} (${col.toUpperCase()})`, col, beasts[idx], false)
-      );
+      if (settings.playerCount === 2) {
+        // Opposite colors for classic balanced 2-player ludo
+        players = [
+          createPlayer('p_1', 'Player 1 (Lion Pride)', 'red', 'lion', false),
+          createPlayer('p_2', 'Player 2 (Giraffe Valley)', 'yellow', 'giraffe', false),
+        ];
+      } else if (settings.playerCount === 3) {
+        players = [
+          createPlayer('p_1', 'Player 1 (Lion Pride)', 'red', 'lion', false),
+          createPlayer('p_2', 'Player 2 (Elephant Tribe)', 'green', 'elephant', false),
+          createPlayer('p_3', 'Player 3 (Giraffe Valley)', 'yellow', 'giraffe', false),
+        ];
+      } else {
+        players = [
+          createPlayer('p_1', 'Player 1 (Lion Pride)', 'red', 'lion', false),
+          createPlayer('p_2', 'Player 2 (Elephant Tribe)', 'green', 'elephant', false),
+          createPlayer('p_3', 'Player 3 (Giraffe Valley)', 'yellow', 'giraffe', false),
+          createPlayer('p_4', 'Player 4 (Zebra Herd)', 'blue', 'zebra', false),
+        ];
+      }
     } else {
-      // Solo vs AI or standard
-      players = [
-        createPlayer('p1', get().userProfile.username, humanColor, get().userProfile.beastGuardian, false),
-        createPlayer('ai_2', 'Bantu the Tusker', 'green', 'elephant', true, 'medium'),
-        createPlayer('ai_3', 'Kesi the Swift', 'yellow', 'cheetah', true, 'hard'),
-        createPlayer('ai_4', 'Mosi the Shadow', 'blue', 'zebra', true, 'expert'),
-      ].slice(0, settings.playerCount);
+      // Solo vs AI / AI Only
+      // Map opposite and distinct colors relative to humanColor
+      const colorClans: Record<PlayerColor, { beast: BeastType; name: string }> = {
+        red: { beast: 'lion', name: 'Simba the Lion' },
+        green: { beast: 'elephant', name: 'Bantu the Tusker' },
+        yellow: { beast: 'giraffe', name: 'Twiga the Wise' },
+        blue: { beast: 'zebra', name: 'Mosi the Shadow' },
+      };
+
+      const humanPlayer = createPlayer(
+        'p1',
+        get().userProfile.username,
+        humanColor,
+        get().userProfile.beastGuardian || colorClans[humanColor].beast,
+        false
+      );
+
+      // Determine opponent colors
+      let opponentColors: PlayerColor[] = [];
+      if (settings.playerCount === 2) {
+        // Classic opposite corner pairing
+        const oppositeMap: Record<PlayerColor, PlayerColor> = {
+          red: 'yellow',
+          yellow: 'red',
+          green: 'blue',
+          blue: 'green',
+        };
+        opponentColors = [oppositeMap[humanColor]];
+      } else if (settings.playerCount === 3) {
+        const remaining = (['red', 'green', 'yellow', 'blue'] as PlayerColor[]).filter((c) => c !== humanColor);
+        opponentColors = remaining.slice(0, 2);
+      } else {
+        opponentColors = (['red', 'green', 'yellow', 'blue'] as PlayerColor[]).filter((c) => c !== humanColor);
+      }
+
+      const aiOpponents = opponentColors.map((col, idx) => {
+        const info = colorClans[col];
+        const diffs: AIDifficulty[] = ['medium', 'hard', 'expert'];
+        return createPlayer(
+          `ai_${idx + 2}`,
+          info.name,
+          col,
+          info.beast,
+          true,
+          diffs[idx % diffs.length]
+        );
+      });
+
+      players = [humanPlayer, ...aiOpponents];
     }
 
     const newGameState: GameState = {
@@ -218,17 +311,27 @@ export const useGameStore = create<AppState>((set, get) => ({
       spectatorsCount: Math.floor(Math.random() * 12) + 3,
     };
 
+    let shouldShowOnboarding = false;
+    if (typeof window !== 'undefined') {
+      try {
+        shouldShowOnboarding = localStorage.getItem('savannah_ludo_onboarding_completed') !== 'true';
+      } catch {}
+    }
+
     set({
       gameState: newGameState,
       selectedPlayerColor: humanColor,
       currentView: 'game',
       isMatchmaking: false,
+      isOnboardingActive: shouldShowOnboarding,
     });
 
-    // Check if first player is AI
-    setTimeout(() => {
-      get().triggerAITurnIfNeeded();
-    }, 600);
+    // Check if first player is AI (only if onboarding is not active)
+    if (!shouldShowOnboarding) {
+      setTimeout(() => {
+        get().triggerAITurnIfNeeded();
+      }, 600);
+    }
   },
 
   rollDice: () => {
@@ -398,9 +501,42 @@ export const useGameStore = create<AppState>((set, get) => ({
 
     if (captureResult) {
       soundEngine.playCapture();
+      if (activePlayer.isAI && Math.random() < 0.75) {
+        setTimeout(() => {
+          const cries = [
+            'Back to your clan yard, little gazelle! 🎯',
+            'Hear the roar of the Lion! 🦁💥',
+            'The cheetah cannot be outrun! ⚡',
+            'My beast is hungry for captures! 🐆',
+          ];
+          get().sendChatMessage(cries[Math.floor(Math.random() * cries.length)], false, {
+            id: activePlayer.id,
+            name: activePlayer.name,
+            avatar: activePlayer.avatar,
+            color: activePlayer.color,
+            clanName: `${activePlayer.beast.toUpperCase()} Clan`,
+          });
+        }, 600);
+      }
     }
     if (reachesGoal) {
       soundEngine.playHomeEnter();
+      if (activePlayer.isAI && Math.random() < 0.8) {
+        setTimeout(() => {
+          const goalCelebrations = [
+            'The oasis is within my grasp! 💧🏆',
+            'The sacred waterhole belongs to my clan! 👑',
+            'By the Great Rift Valley, what a divine step! ✨',
+          ];
+          get().sendChatMessage(goalCelebrations[Math.floor(Math.random() * goalCelebrations.length)], false, {
+            id: activePlayer.id,
+            name: activePlayer.name,
+            avatar: activePlayer.avatar,
+            color: activePlayer.color,
+            clanName: `${activePlayer.beast.toUpperCase()} Clan`,
+          });
+        }, 500);
+      }
     }
 
     const moveAction: MoveAction = {
@@ -655,7 +791,8 @@ export const useGameStore = create<AppState>((set, get) => ({
   },
 
   triggerAITurnIfNeeded: () => {
-    const { gameState } = get();
+    const { gameState, isOnboardingActive } = get();
+    if (isOnboardingActive) return;
     if (!gameState || gameState.status !== 'playing') return;
 
     const activePlayer = gameState.players[gameState.currentTurnIndex];
@@ -691,18 +828,214 @@ export const useGameStore = create<AppState>((set, get) => ({
     }, 600);
   },
 
-  sendChatMessage: (text, isEmote = false) => {
-    const { userProfile, chatMessages } = get();
+  tickTurnTimer: () => {
+    const { gameState, soundEnabled, selectedPlayerColor, isOnboardingActive } = get();
+    if (isOnboardingActive) return;
+    if (!gameState || gameState.status !== 'playing' || gameState.winner) return;
+
+    // Pause timer tick while a piece is currently animating its movement steps
+    if (gameState.turnPhase === 'moving') return;
+
+    const remaining = gameState.turnTimeRemaining;
+    const activePlayer = gameState.players[gameState.currentTurnIndex];
+    const isHumanTurn = activePlayer && activePlayer.color === selectedPlayerColor && !activePlayer.isAI;
+
+    if (remaining > 1) {
+      const nextTime = remaining - 1;
+
+      // Auditory and tactile urgency when time is critically low (<= 5 seconds)
+      if (nextTime <= 5 && soundEnabled) {
+        soundEngine.playTimerTick(true);
+        if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+          try {
+            navigator.vibrate(40);
+          } catch {}
+        }
+      } else if (nextTime === 10 && soundEnabled) {
+        soundEngine.playTimerTick(false);
+      }
+
+      set({
+        gameState: {
+          ...gameState,
+          turnTimeRemaining: nextTime,
+        },
+      });
+    } else {
+      // 0 seconds: Timer expired!
+      set({
+        gameState: {
+          ...gameState,
+          turnTimeRemaining: 0,
+        },
+      });
+      get().handleTurnTimeout();
+    }
+  },
+
+  handleTurnTimeout: () => {
+    const { gameState, soundEnabled } = get();
+    if (!gameState || gameState.status !== 'playing' || gameState.winner) return;
+
+    if (soundEnabled) {
+      soundEngine.playTimeout();
+    }
+
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate([100, 50, 100]);
+      } catch {}
+    }
+
+    const activePlayer = gameState.players[gameState.currentTurnIndex];
+    if (!activePlayer) return;
+
+    // Case 1: Player did not roll in time -> auto roll and auto move
+    if (!gameState.hasRolled && gameState.turnPhase === 'roll_dice') {
+      const timeoutLog = {
+        id: `log_timeout_${Date.now()}`,
+        text: `⏰ Time expired for ${activePlayer.name}! Auto-rolling under Savannah Pressure!`,
+        time: 'Now',
+        type: 'system' as const,
+      };
+
+      set({
+        gameState: {
+          ...gameState,
+          gameLogs: [timeoutLog, ...gameState.gameLogs],
+        },
+      });
+
+      get().rollDice();
+
+      setTimeout(() => {
+        const stateNow = get().gameState;
+        if (!stateNow || stateNow.status !== 'playing' || stateNow.currentTurnIndex !== gameState.currentTurnIndex) return;
+
+        if (stateNow.validPieceMoves && stateNow.validPieceMoves.length > 0 && stateNow.currentDiceValue) {
+          const chosenPieceId = chooseAIMove(activePlayer, stateNow.currentDiceValue, stateNow, 'medium') ?? stateNow.validPieceMoves[0];
+          if (chosenPieceId !== null && chosenPieceId !== undefined) {
+            get().selectPieceToMove(chosenPieceId);
+          } else {
+            get().endTurn();
+          }
+        } else {
+          get().endTurn();
+        }
+      }, 550);
+      return;
+    }
+
+    // Case 2: Player rolled, but failed to select a piece within the remaining seconds
+    if (gameState.hasRolled && gameState.validPieceMoves && gameState.validPieceMoves.length > 0 && gameState.currentDiceValue) {
+      const timeoutLog = {
+        id: `log_timeout_${Date.now()}`,
+        text: `⏰ Time expired! Auto-moving highest priority piece for ${activePlayer.name}!`,
+        time: 'Now',
+        type: 'system' as const,
+      };
+
+      set({
+        gameState: {
+          ...gameState,
+          gameLogs: [timeoutLog, ...gameState.gameLogs],
+        },
+      });
+
+      const chosenPieceId = chooseAIMove(activePlayer, gameState.currentDiceValue, gameState, 'medium') ?? gameState.validPieceMoves[0];
+      if (chosenPieceId !== null && chosenPieceId !== undefined) {
+        get().selectPieceToMove(chosenPieceId);
+      } else {
+        get().endTurn();
+      }
+      return;
+    }
+
+    // Case 3: In targeting or no moves -> pass turn
+    get().cancelAbilityTargeting();
+    get().endTurn();
+  },
+
+  sendChatMessage: (text, isEmote = false, senderOverride) => {
+    const { userProfile, chatMessages, selectedPlayerColor, soundEnabled, isChatPanelOpen, unreadChatCount } = get();
+    const isSelf = !senderOverride || senderOverride.id === userProfile.id;
+
     const newMsg: ChatMessage = {
-      id: `msg_${Date.now()}`,
-      senderId: userProfile.id,
-      senderName: userProfile.username,
-      senderAvatar: userProfile.avatar,
+      id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      senderId: senderOverride?.id || userProfile.id,
+      senderName: senderOverride?.name || userProfile.username,
+      senderAvatar: senderOverride?.avatar || userProfile.avatar,
+      senderColor: senderOverride?.color || selectedPlayerColor,
+      clanName: senderOverride?.clanName || userProfile.clanName,
       text,
       isEmote,
-      timestamp: 'Just now',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
-    set({ chatMessages: [...chatMessages, newMsg] });
+
+    if (soundEnabled) {
+      soundEngine.playChatMessage();
+    }
+
+    set({
+      chatMessages: [...chatMessages, newMsg],
+      unreadChatCount: isChatPanelOpen ? 0 : unreadChatCount + 1,
+    });
+
+    // If human sent a message, opponents occasionally reply in context
+    if (isSelf) {
+      const { gameState } = get();
+      if (gameState && gameState.status === 'playing') {
+        const aiOpponents = gameState.players.filter((p) => p.isAI);
+        if (aiOpponents.length > 0 && Math.random() < 0.65) {
+          const responder = aiOpponents[Math.floor(Math.random() * aiOpponents.length)];
+          setTimeout(() => {
+            const currentGameState = get().gameState;
+            if (!currentGameState || currentGameState.status !== 'playing') return;
+
+            let replyPhrase = 'May the ancestral spirits guide your dice! ✨';
+            if (text.includes('Jambo') || text.includes('Welcome') || text.includes('Honor')) {
+              const replies = [
+                'Jambo, noble chieftain! May the best clan win! 🦁',
+                'Honor to your pride! The Serengeti tests all beasts! 🛡️',
+                'Welcome to the dust and glory of the savannah! 🌿',
+              ];
+              replyPhrase = replies[Math.floor(Math.random() * replies.length)];
+            } else if (text.includes('roar') || text.includes('territory') || text.includes('cheetah') || text.includes('stomp') || text.includes('yard')) {
+              const replies = [
+                'Your roar is loud, but my paws are swift! 🐆',
+                'We shall see who drinks first at the oasis! 💧',
+                'Watch your back in the tall acacia grass! 🌾',
+                'Bold words from a brave beast! 🎲🔥',
+              ];
+              replyPhrase = replies[Math.floor(Math.random() * replies.length)];
+            } else if (text.includes('Baobab') || text.includes('Safe') || text.includes('luck') || text.includes('oasis')) {
+              const replies = [
+                'The ancient spirits favor the cunning! 🌳',
+                'Enjoy your sanctuary while it lasts! ⏳',
+                'A fortunate roll indeed, chieftain! ✨',
+              ];
+              replyPhrase = replies[Math.floor(Math.random() * replies.length)];
+            } else {
+              const replies = [
+                'The savannah spirits are restless this round! 🌪️',
+                'Well moved, warrior! 🤝',
+                'The dice have a mind of their own today! 🎲',
+                'May your beasts stay fleet of foot! 🐾',
+              ];
+              replyPhrase = replies[Math.floor(Math.random() * replies.length)];
+            }
+
+            get().sendChatMessage(replyPhrase, false, {
+              id: responder.id,
+              name: responder.name,
+              avatar: responder.avatar,
+              color: responder.color,
+              clanName: `${responder.beast.toUpperCase()} Clan`,
+            });
+          }, 1100 + Math.random() * 1100);
+        }
+      }
+    }
   },
 
   claimQuestReward: (questId) => {
@@ -893,5 +1226,31 @@ export const useGameStore = create<AppState>((set, get) => ({
       ? Math.min(activeReplay.moves.length - 1, activeReplay.currentStep + 1)
       : Math.max(0, activeReplay.currentStep - 1);
     set({ activeReplay: { ...activeReplay, currentStep: newStep } });
+  },
+
+  openOnboarding: () => {
+    const { soundEnabled } = get();
+    if (soundEnabled) {
+      soundEngine.playTutorialStep();
+    }
+    set({ isOnboardingActive: true });
+  },
+
+  dismissOnboarding: (neverShowAgain = true) => {
+    const { soundEnabled } = get();
+    if (soundEnabled) {
+      soundEngine.playHomeEnter();
+    }
+    if (neverShowAgain && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('savannah_ludo_onboarding_completed', 'true');
+      } catch {}
+    }
+    set({ isOnboardingActive: false });
+
+    // If current active player is AI, resume turn
+    setTimeout(() => {
+      get().triggerAITurnIfNeeded();
+    }, 400);
   },
 }));

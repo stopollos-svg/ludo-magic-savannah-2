@@ -6,6 +6,8 @@ import React, { useState } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { GameMode, AIDifficulty, PlayerColor, BeastType, BoardAmbiance } from '../../types/game';
 import { getRankBadge } from '../../utils/ludoEngine';
+import { LudoMagicLogo } from '../common/LudoMagicLogo';
+import { PlayerSelectionCard } from './PlayerSelectionCard';
 import {
   Play,
   Bot,
@@ -37,7 +39,7 @@ export const LobbyView: React.FC = () => {
 
   // Mode Selection / Customizer state
   const [selectedMode, setSelectedMode] = useState<GameMode>('vs_ai');
-  const [playerCount, setPlayerCount] = useState<2 | 3 | 4>(4);
+  const [playerCount, setPlayerCount] = useState<2 | 3 | 4>(2);
   const [isMagicEnabled, setIsMagicEnabled] = useState(true);
   const [fastMode, setFastMode] = useState(false);
   const [aiDifficulty, setAiDifficulty] = useState<AIDifficulty>('medium');
@@ -74,8 +76,16 @@ export const LobbyView: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-6 flex flex-col gap-6">
-      {/* 1. HERO BANNER: Player Ranked Card & Season Progress */}
+    <div className="w-full max-w-4xl mx-auto px-4 py-4 sm:py-6 flex flex-col gap-6">
+      {/* Official Brand Logo Banner (Matching Video) */}
+      <div className="flex justify-center my-2">
+        <LudoMagicLogo size="lg" />
+      </div>
+
+      {/* Premier Player Count & AI Selection Launcher */}
+      <PlayerSelectionCard />
+
+      {/* HERO BANNER: Player Ranked Card & Season Progress */}
       <div className="relative overflow-hidden bg-gradient-to-r from-[#172617] via-[#101b10] to-[#1d160b] border-2 border-[#d4af37]/40 rounded-3xl p-5 sm:p-6 shadow-2xl shadow-black/80 flex flex-col md:flex-row items-center justify-between gap-6">
         {/* Left: Avatar & Rank */}
         <div className="flex items-center gap-4 text-left w-full md:w-auto">
@@ -325,10 +335,10 @@ export const LobbyView: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Player Count */}
+            {/* Player Count (At least 2 active yards) */}
             <div>
-              <label className="text-xs font-bold text-[#d4af37] block mb-2">Players</label>
-              <div className="flex items-center gap-2 bg-[#0a120a] p-1 rounded-xl border border-[#d4af37]/20">
+              <label className="text-xs font-bold text-[#d4af37] block mb-2">Players (Min 2 Yards)</label>
+              <div className="flex items-center gap-1.5 bg-[#0a120a] p-1 rounded-xl border border-[#d4af37]/20">
                 {([2, 3, 4] as const).map((cnt) => (
                   <button
                     key={cnt}
@@ -339,7 +349,7 @@ export const LobbyView: React.FC = () => {
                         : 'text-[#e0dcc5]/70 hover:bg-[#162516]'
                     }`}
                   >
-                    {cnt}P
+                    {cnt === 2 ? '2P (1v1)' : `${cnt}P`}
                   </button>
                 ))}
               </div>
@@ -374,7 +384,7 @@ export const LobbyView: React.FC = () => {
                 {[
                   { col: 'red' as PlayerColor, icon: '🦁', bg: 'bg-red-600' },
                   { col: 'green' as PlayerColor, icon: '🐘', bg: 'bg-emerald-600' },
-                  { col: 'yellow' as PlayerColor, icon: '🐆', bg: 'bg-[#d4af37]' },
+                  { col: 'yellow' as PlayerColor, icon: '🦒', bg: 'bg-[#d4af37]' },
                   { col: 'blue' as PlayerColor, icon: '🦓', bg: 'bg-blue-600' },
                 ].map((c) => (
                   <button

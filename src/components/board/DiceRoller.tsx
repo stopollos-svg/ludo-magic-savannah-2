@@ -87,7 +87,7 @@ export const DiceRoller: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center gap-2">
+    <div id="onboarding-dice-target" className="flex flex-col items-center justify-center gap-2">
       {/* Consecutive Sixes Warning Banner */}
       {activePlayer.consecutiveSixes > 0 && (
         <div className="flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#d4af37]/20 text-[#d4af37] border border-[#d4af37]/40 animate-pulse">
@@ -100,7 +100,13 @@ export const DiceRoller: React.FC = () => {
       <div className="relative">
         {/* Pulsing Aura if can roll */}
         {canRoll && (
-          <div className="absolute -inset-2 rounded-2xl bg-gradient-to-r from-[#e8c858] via-[#d4af37] to-[#aa8218] blur-md opacity-75 animate-pulse pointer-events-none" />
+          <div
+            className={`absolute -inset-2 rounded-2xl blur-md opacity-80 pointer-events-none transition-all ${
+              gameState.turnTimeRemaining <= 5
+                ? 'bg-gradient-to-r from-red-600 via-amber-500 to-red-600 animate-ping'
+                : 'bg-gradient-to-r from-[#e8c858] via-[#d4af37] to-[#aa8218] animate-pulse'
+            }`}
+          />
         )}
 
         <motion.button
@@ -118,10 +124,12 @@ export const DiceRoller: React.FC = () => {
               : {}
           }
           transition={{ duration: 0.45, ease: 'easeInOut' }}
-          className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-b from-[#fbf8ee] via-[#ece3ca] to-[#dfd5b5] border-2 sm:border-3 border-[#d4af37] shadow-xl flex items-center justify-center ${
+          className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-b from-[#fbf8ee] via-[#ece3ca] to-[#dfd5b5] border-2 sm:border-3 shadow-xl flex items-center justify-center ${
             canRoll
-              ? 'cursor-pointer ring-4 ring-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.4)]'
-              : 'opacity-90 cursor-default shadow-black/60'
+              ? gameState.turnTimeRemaining <= 5
+                ? 'cursor-pointer border-red-500 ring-4 ring-red-500/80 shadow-[0_0_25px_rgba(239,68,68,0.7)] animate-pulse'
+                : 'cursor-pointer border-[#d4af37] ring-4 ring-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.4)]'
+              : 'opacity-90 cursor-default border-[#d4af37] shadow-black/60'
           }`}
         >
           {/* Inner Pip Render */}
@@ -139,13 +147,19 @@ export const DiceRoller: React.FC = () => {
       {/* Action / Helper Text */}
       <div className="text-center">
         {canRoll && (
-          <span className="text-xs sm:text-sm font-extrabold text-[#d4af37] animate-bounce tracking-wide drop-shadow">
-            TAP TO ROLL!
+          <span
+            className={`text-xs sm:text-sm font-black tracking-wide drop-shadow ${
+              gameState.turnTimeRemaining <= 5
+                ? 'text-red-400 animate-ping'
+                : 'text-[#d4af37] animate-bounce'
+            }`}
+          >
+            {gameState.turnTimeRemaining <= 5 ? `RUSH! ${gameState.turnTimeRemaining}s - ROLL NOW!` : 'TAP TO ROLL!'}
           </span>
         )}
         {!canRoll && gameState.turnPhase === 'select_piece' && isHumanTurn && (
-          <span className="text-xs font-semibold text-[#e0dcc5] animate-pulse">
-            Select a glowing animal to move
+          <span className={`text-xs font-semibold animate-pulse ${gameState.turnTimeRemaining <= 5 ? 'text-red-400 font-black' : 'text-[#e0dcc5]'}`}>
+            {gameState.turnTimeRemaining <= 5 ? `MOVE NOW (${gameState.turnTimeRemaining}s)` : 'Select a glowing animal to move'}
           </span>
         )}
         {activePlayer.isAI && (

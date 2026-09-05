@@ -11,6 +11,7 @@ export type AIDifficulty = 'easy' | 'medium' | 'hard' | 'expert';
 export type GameMode = 
   | 'vs_ai'
   | 'pass_and_play'
+  | 'solo_animal'
   | 'online_ranked'
   | 'private_room'
   | 'team_2v2'

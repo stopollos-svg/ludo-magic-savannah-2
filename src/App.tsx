@@ -6,6 +6,7 @@
 import React, { useEffect } from 'react';
 import { useGameStore } from './store/gameStore';
 import { SavannahHeader } from './components/common/SavannahHeader';
+import { SavannahLivingBackground } from './components/common/SavannahLivingBackground';
 import { LobbyView } from './components/lobby/LobbyView';
 import { LudoBoard } from './components/board/LudoBoard';
 import { DiceRoller } from './components/board/DiceRoller';
@@ -18,6 +19,9 @@ import { LeaderboardModal } from './components/social/LeaderboardModal';
 import { QuestsView } from './components/quests/QuestsView';
 import { TournamentBracket } from './components/tournament/TournamentBracket';
 import { AdminDevModal } from './components/admin/AdminDevModal';
+import { OnboardingOverlay } from './components/onboarding/OnboardingOverlay';
+import { SavannahChatDrawer } from './components/chat/SavannahChatDrawer';
+import { FloatingChatToasts } from './components/chat/FloatingChatToasts';
 
 export default function App() {
   const { currentView, gameState, musicEnabled } = useGameStore();
@@ -33,8 +37,11 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-screen w-full bg-gradient-to-b ${ambianceGradients[ambiance]} text-[#e0dcc5] flex flex-col font-sans transition-colors duration-700 select-none pb-12 relative bg-dots-pattern`}
+      className={`min-h-screen w-full bg-gradient-to-b ${ambianceGradients[ambiance]} text-[#e0dcc5] flex flex-col font-sans transition-colors duration-700 select-none pb-12 relative bg-dots-pattern overflow-x-hidden`}
     >
+      {/* Living African Savannah Animated Background */}
+      <SavannahLivingBackground ambiance={ambiance} />
+
       {/* Top Navigation & Status Bar */}
       <SavannahHeader />
 
@@ -58,6 +65,15 @@ export default function App() {
 
             {/* Victory Podium Modal */}
             <VictoryModal />
+
+            {/* Guided First-Match Onboarding Overlay */}
+            <OnboardingOverlay />
+
+            {/* Real-time Slide-out Savannah Chat Drawer */}
+            <SavannahChatDrawer />
+
+            {/* In-Game Floating Chat Speech Bubbles & Side Trigger */}
+            <FloatingChatToasts />
           </div>
         )}
 

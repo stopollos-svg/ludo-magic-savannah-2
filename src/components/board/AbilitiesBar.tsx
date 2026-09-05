@@ -24,7 +24,10 @@ export const AbilitiesBar: React.FC = () => {
   const canCast = isMyTurn && hasEnoughMana && isOffCooldown && gameState.status === 'playing';
 
   return (
-    <div className="w-full max-w-[560px] mx-auto bg-gradient-to-r from-[#182818]/90 via-[#101c10]/90 to-[#182818]/90 border border-[#d4af37]/30 rounded-xl p-2.5 sm:p-3 shadow-lg shadow-black/60 flex flex-col sm:flex-row items-center justify-between gap-3">
+    <div
+      id="onboarding-abilities-target"
+      className="w-full max-w-[560px] mx-auto bg-gradient-to-r from-[#182818]/90 via-[#101c10]/90 to-[#182818]/90 border border-[#d4af37]/30 rounded-xl p-2.5 sm:p-3 shadow-lg shadow-black/60 flex flex-col sm:flex-row items-center justify-between gap-3"
+    >
       {/* Mana Meter */}
       <div className="flex items-center gap-2.5 w-full sm:w-auto">
         <div className="w-8 h-8 rounded-lg bg-[#081820] border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-md">

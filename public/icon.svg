@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#142314"/>
+      <stop offset="50%" stop-color="#0a140a"/>
+      <stop offset="100%" stop-color="#050a05"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fceda2"/>
+      <stop offset="35%" stop-color="#d4af37"/>
+      <stop offset="70%" stop-color="#aa8218"/>
+      <stop offset="100%" stop-color="#6e5008"/>
+    </linearGradient>
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#d4af37" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#d4af37" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  
+  <!-- Outer Gold Border -->
+  <rect x="16" y="16" width="480" height="480" rx="96" fill="none" stroke="url(#goldGrad)" stroke-width="8" opacity="0.8"/>
+  <rect x="28" y="28" width="456" height="456" rx="84" fill="none" stroke="#d4af37" stroke-width="2" opacity="0.4"/>
+
+  <!-- Radial Glow -->
+  <circle cx="256" cy="256" r="210" fill="url(#sunGlow)"/>
+
+  <!-- 3D Geometric Dice Face in Center -->
+  <rect x="136" y="136" width="240" height="240" rx="44" fill="#1b2e1b" stroke="url(#goldGrad)" stroke-width="8"/>
+  <rect x="152" y="152" width="208" height="208" rx="34" fill="#122012" stroke="#d4af37" stroke-width="2" opacity="0.6"/>
+
+  <!-- Ludo 5-pip or Lion Crown Emblem inside Dice -->
+  <!-- Center Star/Crown -->
+  <circle cx="256" cy="256" r="32" fill="url(#goldGrad)"/>
+  <circle cx="256" cy="256" r="22" fill="#0d1a0d"/>
+  <circle cx="256" cy="256" r="12" fill="url(#goldGrad)"/>
+
+  <!-- Four Corner Pips (representing 4 yards: Red, Green, Yellow, Blue) -->
+  <circle cx="192" cy="192" r="18" fill="#ef4444" stroke="#d4af37" stroke-width="3"/>
+  <circle cx="320" cy="192" r="18" fill="#10b981" stroke="#d4af37" stroke-width="3"/>
+  <circle cx="192" cy="320" r="18" fill="#3b82f6" stroke="#d4af37" stroke-width="3"/>
+  <circle cx="320" cy="320" r="18" fill="#f59e0b" stroke="#d4af37" stroke-width="3"/>
+
+  <!-- Savannah Acacia Tree Silhouette at Base -->
+  <path d="M 230 430 L 282 430 L 262 390 L 250 390 Z" fill="url(#goldGrad)" opacity="0.9"/>
+  <ellipse cx="256" cy="386" rx="72" ry="16" fill="url(#goldGrad)" opacity="0.85"/>
+  <ellipse cx="210" cy="392" rx="38" ry="10" fill="url(#goldGrad)" opacity="0.7"/>
+  <ellipse cx="302" cy="392" rx="38" ry="10" fill="url(#goldGrad)" opacity="0.7"/>
+
+  <!-- Crown on Top -->
+  <path d="M 206 120 L 226 80 L 256 104 L 286 80 L 306 120 Z" fill="url(#goldGrad)"/>
+  <circle cx="226" cy="74" r="6" fill="#fceda2"/>
+  <circle cx="256" cy="98" r="6" fill="#fceda2"/>
+  <circle cx="286" cy="74" r="6" fill="#fceda2"/>
+</svg>
